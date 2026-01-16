@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="sharedpref" path="."/>
+    <include domain="database" path="."/>
+    <include domain="file" path="."/>
+    <include domain="external" path="."/>
+
+    <!-- Exclude sensitive data -->
+    <exclude domain="sharedpref" path="auth.xml"/>
+    <exclude domain="sharedpref" path="emergency_contacts.xml"/>
+    <exclude domain="database" path="location_history.db"/>
+
+    <!-- Include app-specific files -->
+    <include domain="file" path="config/"/>
+    <include domain="file" path="cache/"/>
+</full-backup-content>

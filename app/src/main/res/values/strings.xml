@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">AURA</string>
+
+        <!-- Google Maps API Key -->
+        <string name="google_maps_key" translatable="false">AIzaSyAfaROPktnIljltwht-DOFuHnUIHC8fky0</string>
+
+        <!-- Notification Channel -->
+        <string name="default_notification_channel_id" translatable="false">aura_default_channel</string>
+        <string name="emergency_notification_channel_id" translatable="false">aura_emergency_channel</string>
+        <string name="location_notification_channel_id" translatable="false">aura_location_channel</string>
+
+        <!-- Channel Names -->
+        <string name="default_channel_name">General Notifications</string>
+        <string name="emergency_channel_name">Emergency Alerts</string>
+        <string name="location_channel_name">Location Updates</string>
+
+        <!-- Channel Descriptions -->
+        <string name="default_channel_description">General notifications from AURA</string>
+        <string name="emergency_channel_description">Emergency alerts and SOS notifications</string>
+        <string name="location_channel_description">Background location tracking updates</string>
+    </resources>
