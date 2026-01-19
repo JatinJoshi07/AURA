@@ -1060,3 +1060,128 @@ graph LR
 *Last Updated: January 2025*
 
 </div>
+
+
+
+
+AURA: Unified System Documentation & Diagrams
+This document consolidates the technical architecture, user interactions, and logic flows of the AURA (AI-Unified Response & Analytics) ecosystem into unified diagrams.
+1. Unified Architecture Diagram
+This diagram represents the high-level technical stack and how the Android Client interacts with AI and Cloud services.
+Java
+mermaid
+graph TD
+    subgraph Mobile_App [AURA Android - Jetpack Compose]
+        UI[Material 3 UI Layer]
+        VM[ViewModels - State Management]
+        Repo[Data Repository]
+        Service[Background SOS Service]
+        Local[Local Speech Recognition]
+    end
+
+    subgraph Intelligence_Engine [Google AI Ecosystem]
+        GeminiV[Gemini 1.5 Flash - Vision AI]
+        GeminiN[Gemini Pro - NLP & Sentiment]
+        MapsAPI[Google Maps Platform]
+    end
+
+    subgraph Cloud_Backend [Firebase Platform]
+        Auth[Firebase Authentication]
+        DB[(Cloud Firestore)]
+        FCM[Cloud Messaging - Notifications]
+        Storage[Firebase Storage - Media]
+    end
+
+    UI --> VM
+    VM --> Repo
+    Repo --> DB
+    Repo --> GeminiV
+    Repo --> GeminiN
+    Service --> Local
+    Local --> FCM
+    Repo --> MapsAPI
+    DB -- Real-time Sync --> UI
+Show full code block
+2. Global Use Case Diagram
+This diagram defines the functionalities available to Students (Male/Female), Faculty, and Admins.
+Kotlin
+mermaid
+usecaseDiagram
+    actor "Student (Female)" as SF
+    actor "Student (Male)" as SM    actor "Faculty/Security" as F
+    actor "Super Admin" as A
+
+    package "AURA Core" {
+        usecase "Manual & Voice SOS" as UC_SOS
+        usecase "Report Infrastructure Hazard (Vision AI)" as UC_Infra
+        usecase "Collaborative Hub (Skill Search)" as UC_Collab
+        usecase "Submit Wellness Check-in" as UC_Well
+        usecase "View Personal SOS History" as UC_Hist
+    }
+
+    package "Administrative" {
+        usecase "Manage Faculty Accounts" as UC_Manage
+        usecase "Access Incident War-Room (Live Map)" as UC_War
+        usecase "Resolve Maintenance Tickets" as UC_Res
+        usecase "Analyze Campus Wellness Reports" as UC_Analytics
+    }
+
+    SF --> UC_SOS
+    SF --> UC_Infra
+    SF --> UC_Collab
+    SF --> UC_Well
+    
+    SM --> UC_SOS
+    SM --> UC_Infra
+    SM --> UC_Collab
+    SM --> UC_Well
+
+    F --> UC_War
+    F --> UC_Res
+    F --> UC_Analytics
+
+    A --> UC_Manage
+    A --> UC_War
+    A --> UC_Res
+Show full code block
+3. Unified Process Flow (Core App Logic)
+This flow shows the end-to-end lifecycle of the two main triggers in the app: Safety Alerts and AI Infrastructure Reporting.
+Kotlin
+mermaid
+stateDiagram-v2
+    [*] --> Idle
+    
+    state "Safety Event" as Safety {
+        Idle --> PassiveListening: App in Background
+        PassiveListening --> TriggerAlert: "Secret Word" Detected
+        TriggerAlert --> SilentCapture: Capture GPS + 10s Audio
+        SilentCapture --> NotifyAdmin: FCM Alert to War-Room
+    }
+
+    state "Infrastructure Event" as Infra {
+        Idle --> CapturePhoto: Student opens Sentinel
+        CapturePhoto --> GeminiAnalysis: Process with Gemini 1.5 Flash
+        GeminiAnalysis --> CreateTicket: Auto-rank Severity (1-5)
+        CreateTicket --> MapUpdate: Marker appears on Faculty Map
+    }
+
+    NotifyAdmin --> Resolution
+    MapUpdate --> Resolution
+    Resolution --> [*]: Incident Resolved by Faculty
+Show full code block
+4. Wireframe & Mockup Logic (Unified UI)
+Based on the current implementation of screens like WellnessReportScreen and IncidentDashboard, here is the structural breakdown of the app's interface:
+| Screen Module | Core Components | Logic / Data Source | | :--- | :--- | :--- | | Main Dashboard | SOS Button, Quick Action Grid, Live Feed | Firestore Incidents collection | | Pink Shield | Waveform Visualizer, Keyword Input, AI Chat | Local SpeechRecognizer + Gemini | | Sentinel (Infra) | Camera Preview, AI Result Chips, Submit | CameraX + Gemini 1.5 Flash | | Collab-Hub | Search Bar, Skill Cards, Chat Button | Firestore Users & Projects | | War-Room (Admin) | Google Map, Priority Filter, Resolve Button | maps-compose + Firestore Real-time | | Wellness Report | Gauge Chart, Progress Bars, AI Insights | WellnessViewModel (Aggregation) |
+5. Summary Tech Stack
+•
+Front-end: Kotlin, Jetpack Compose, Material 3, Hilt DI.
+•
+Intelligence: Google Gemini (Multimodal), Speech-to-Text.
+•
+Infrastructure: Firebase (Auth, Firestore, Cloud Messaging, Storage).
+•
+Maps: Google Maps SDK for Android.
+•
+Media: CameraX for vision tasks, Coil for image loading.
+•
+Animation: Lottie & Compose Animations.
