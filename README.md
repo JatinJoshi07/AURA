@@ -164,9 +164,6 @@ AURA is engineered around **three integrated functional pillars**:
 
 ### 🔐 Authentication System
 
-**Admin (Predefined Credentials):**
-- Email: `jatinjoshi9527@gmail.com`
-- Password: `Jatin9527`
 
 **Faculty:**
 - Created and managed exclusively by Admin users
