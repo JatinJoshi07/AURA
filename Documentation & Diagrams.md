@@ -2682,6 +2682,195 @@ graph LR
 
 ---
 
+
+graph TB
+    %% Actors
+    SF["👩‍🎓<br/>Female Student"]
+    SM["👨‍🎓<br/>Male Student"]
+    Faculty["👨‍🏫<br/>Faculty/<br/>Security"]
+    Admin["👔<br/>Super<br/>Admin"]
+    System["⚙️<br/>System/<br/>Scheduler"]
+    
+    %% Emergency & Safety Use Cases
+    subgraph Emergency_Safety ["🚨 Emergency & Safety Module"]
+        UC1["Manual SOS Alert<br/><i>«Button Press»</i>"]
+        UC2["Voice-Activated SOS<br/><i>«Panic Keyword»</i>"]
+        UC3["Configure Panic Keyword<br/><i>«Setup Secret Word»</i>"]
+        UC4["Manage Trusted Contacts<br/><i>«Emergency Network»</i>"]
+        UC5["View SOS History<br/><i>«Past Emergencies»</i>"]
+        UC6["AI Guardian Chat<br/><i>«Simulated Call»</i>"]
+        UC7["Safe Route Navigation<br/><i>«Smart Path Finding»</i>"]
+        UC8["Track Emergency Status<br/><i>«Real-time Updates»</i>"]
+    end
+    
+    %% Infrastructure Management
+    subgraph Infrastructure ["🔧 Infrastructure Management (Sentinel)"]
+        UC9["Report Infrastructure Issue<br/><i>«Photo Capture»</i>"]
+        UC10["AI Image Analysis<br/><i>«Gemini Vision»</i>"]
+        UC11["Submit Anonymous Complaint<br/><i>«Confidential Reporting»</i>"]
+        UC12["Upvote Existing Issues<br/><i>«Community Validation»</i>"]
+        UC13["View Incident Map<br/><i>«Live Dashboard»</i>"]
+        UC14["Assign Maintenance Tickets<br/><i>«Task Delegation»</i>"]
+        UC15["Resolve Infrastructure Issues<br/><i>«Mark Complete»</i>"]
+        UC16["Export Issue Reports<br/><i>«Analytics Export»</i>"]
+    end
+    
+    %% Collaboration Hub
+    subgraph Collaboration ["🤝 Collaboration Hub (Collab-Hub)"]
+        UC17["Create Project Posting<br/><i>«Find Collaborators»</i>"]
+        UC18["Search by Skills<br/><i>«Smart Matching»</i>"]
+        UC19["View Match Recommendations<br/><i>«AI Suggestions»</i>"]
+        UC20["Send Collaboration Request<br/><i>«Team Invitation»</i>"]
+        UC21["Manage Active Projects<br/><i>«Project Dashboard»</i>"]
+        UC22["Rate Team Members<br/><i>«Peer Review»</i>"]
+        UC23["Update Skill Profile<br/><i>«Portfolio Management»</i>"]
+        UC24["View Verified Badges<br/><i>«Reputation System»</i>"]
+    end
+    
+    %% Wellness & Mental Health
+    subgraph Wellness ["❤️ Wellness & Mental Health"]
+        UC25["Submit Daily Check-in<br/><i>«Mood Tracking»</i>"]
+        UC26["Anonymous Wellness Report<br/><i>«Confidential Submission»</i>"]
+        UC27["View Personal Wellness Trends<br/><i>«Historical Analytics»</i>"]
+        UC28["AI Sentiment Analysis<br/><i>«Emotion Detection»</i>"]
+        UC29["Analyze Campus Wellness<br/><i>«Aggregate Insights»</i>"]
+        UC30["Generate Wellness Alerts<br/><i>«Risk Detection»</i>"]
+    end
+    
+    %% Administrative Functions
+    subgraph Administrative ["⚙️ Administrative Functions"]
+        UC31["Manage Faculty Accounts<br/><i>«User Administration»</i>"]
+        UC32["Access Incident War-Room<br/><i>«Live Monitoring»</i>"]
+        UC33["Filter Incidents by Priority<br/><i>«Critical/High/Normal»</i>"]
+        UC34["Broadcast Campus Alerts<br/><i>«Mass Notifications»</i>"]
+        UC35["Generate Analytics Reports<br/><i>«Data Insights»</i>"]
+        UC36["Manage Department Data<br/><i>«Organizational Setup»</i>"]
+        UC37["Configure System Settings<br/><i>«Admin Panel»</i>"]
+        UC38["Review Audit Logs<br/><i>«Security Monitoring»</i>"]
+    end
+    
+    %% System Automated Functions
+    subgraph System_Functions ["🤖 Automated System Functions"]
+        UC39["Auto-Calculate Severity<br/><i>«AI Danger Rating»</i>"]
+        UC40["Send FCM Notifications<br/><i>«Push Alerts»</i>"]
+        UC41["Sync Firestore Data<br/><i>«Real-time Updates»</i>"]
+        UC42["Backup Emergency Audio<br/><i>«Cloud Storage»</i>"]
+        UC43["Run Skill Matching Algorithm<br/><i>«Vector Search»</i>"]
+        UC44["Clean Old Data<br/><i>«Scheduled Maintenance»</i>"]
+        UC45["Monitor Background SOS<br/><i>«Passive Listening»</i>"]
+    end
+    
+    %% Female Student Relationships
+    SF --> UC1
+    SF --> UC2
+    SF --> UC3
+    SF --> UC4
+    SF --> UC5
+    SF --> UC6
+    SF --> UC7
+    SF --> UC8
+    SF --> UC9
+    SF --> UC11
+    SF --> UC12
+    SF --> UC17
+    SF --> UC18
+    SF --> UC19
+    SF --> UC20
+    SF --> UC21
+    SF --> UC22
+    SF --> UC23
+    SF --> UC24
+    SF --> UC25
+    SF --> UC26
+    SF --> UC27
+    
+    %% Male Student Relationships
+    SM --> UC1
+    SM --> UC5
+    SM --> UC8
+    SM --> UC9
+    SM --> UC11
+    SM --> UC12
+    SM --> UC17
+    SM --> UC18
+    SM --> UC19
+    SM --> UC20
+    SM --> UC21
+    SM --> UC22
+    SM --> UC23
+    SM --> UC24
+    SM --> UC25
+    SM --> UC26
+    SM --> UC27
+    
+    %% Faculty Relationships
+    Faculty --> UC1
+    Faculty --> UC5
+    Faculty --> UC13
+    Faculty --> UC14
+    Faculty --> UC15
+    Faculty --> UC16
+    Faculty --> UC29
+    Faculty --> UC30
+    Faculty --> UC32
+    Faculty --> UC33
+    Faculty --> UC35
+    
+    %% Admin Relationships
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC15
+    Admin --> UC16
+    Admin --> UC29
+    Admin --> UC30
+    Admin --> UC31
+    Admin --> UC32
+    Admin --> UC33
+    Admin --> UC34
+    Admin --> UC35
+    Admin --> UC36
+    Admin --> UC37
+    Admin --> UC38
+    
+    %% System Automated Relationships
+    System --> UC39
+    System --> UC40
+    System --> UC41
+    System --> UC42
+    System --> UC43
+    System --> UC44
+    System --> UC45
+    
+    %% Include Relationships (Dependencies)
+    UC1 -.->|includes| UC40
+    UC2 -.->|includes| UC45
+    UC2 -.->|includes| UC42
+    UC9 -.->|includes| UC10
+    UC10 -.->|includes| UC39
+    UC14 -.->|includes| UC40
+    UC18 -.->|includes| UC43
+    UC25 -.->|includes| UC28
+    UC32 -.->|includes| UC41
+    
+    %% Extend Relationships (Optional Flows)
+    UC9 -.->|extends| UC11
+    UC17 -.->|extends| UC20
+    UC25 -.->|extends| UC26
+    
+    %% Styling
+    style SF fill:#FCE4EC,stroke:#C2185B,stroke-width:3px,color:#000
+    style SM fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#000
+    style Faculty fill:#FFF3E0,stroke:#F57C00,stroke-width:3px,color:#000
+    style Admin fill:#F3E5F5,stroke:#7B1FA2,stroke-width:3px,color:#000
+    style System fill:#E8F5E9,stroke:#388E3C,stroke-width:3px,color:#000
+    
+    style Emergency_Safety fill:#FFEBEE,stroke:#C62828,stroke-width:2px
+    style Infrastructure fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+    style Collaboration fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    style Wellness fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style Administrative fill:#E3F2FD,stroke:#0D47A1,stroke-width:2px
+    style System_Functions fill:#ECEFF1,stroke:#37474F,stroke-width:2px
+
 ## 🎯 System Highlights
 
 ✅ **99.7% Emergency Response Success Rate**  
