@@ -80,7 +80,7 @@ fun AuraApp(permissionsManager: PermissionsManager) {
         isInitialized = true
     }
 
-    // Role-based navigation logic
+
     LaunchedEffect(isLoggedIn, currentUser, currentRoute) {
         if (isLoggedIn && currentUser != null) {
             val destination = when (currentUser?.role) {
