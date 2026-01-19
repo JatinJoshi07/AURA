@@ -1,20 +1,22 @@
 package com.aura.utils
 
 import android.content.Context
-import android.media.MediaRecorder
-import android.os.Build
+import android.content.Intent
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import androidx.annotation.RequiresApi
+import android.util.Log
+import android.widget.Toast
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.io.File
-import java.io.IOException
+import java.util.*
 
 class VoiceRecognition(private val context: Context) {
 
     private var speechRecognizer: SpeechRecognizer? = null
-    private var mediaRecorder: MediaRecorder? = null
 
     private val _isListening = MutableStateFlow(false)
     val isListening: StateFlow<Boolean> = _isListening
@@ -25,111 +27,174 @@ class VoiceRecognition(private val context: Context) {
     private val _panicKeywordDetected = MutableStateFlow(false)
     val panicKeywordDetected: StateFlow<Boolean> = _panicKeywordDetected
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    fun startListening(panicKeyword: String) {
-        _isListening.value = true
-        _panicKeywordDetected.value = false
+    private val _isReadyToSpeak = MutableStateFlow(false)
+    val isReadyToSpeak: StateFlow<Boolean> = _isReadyToSpeak
 
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
-            setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: android.os.Bundle?) {}
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var currentPanicKeyword: String = ""
+    private var isContinuous: Boolean = false
 
-                override fun onBeginningOfSpeech() {}
+    fun startListening(panicKeyword: String, continuous: Boolean = false) {
+        currentPanicKeyword = panicKeyword
+        isContinuous = continuous
+        
+        mainHandler.post {
+            if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+                val msg = "Speech recognition not available"
+                Log.e("VoiceRecognition", msg)
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                return@post
+            }
 
-                override fun onRmsChanged(rmsdB: Float) {}
+            try {
+                // Ensure we don't have multiple instances
+                stopListeningInternal()
 
-                override fun onBufferReceived(buffer: ByteArray?) {}
+                _isListening.value = true
+                _panicKeywordDetected.value = false
+                _recognizedText.value = "Initializing..."
+                _isReadyToSpeak.value = false
 
-                override fun onEndOfSpeech() {
-                    _isListening.value = false
-                }
-
-                override fun onError(error: Int) {
-                    _isListening.value = false
-                    // Handle error
-                }
-
-                override fun onResults(results: android.os.Bundle?) {
-                    val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    val text = matches?.firstOrNull() ?: ""
-                    _recognizedText.value = text
-
-                    // Check for panic keyword
-                    if (text.contains(panicKeyword, ignoreCase = true)) {
-                        _panicKeywordDetected.value = true
-                        triggerEmergency()
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
+                speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) {
+                        Log.d("VoiceRecognition", "onReadyForSpeech")
+                        _isReadyToSpeak.value = true
+                        _recognizedText.value = "Listening..."
                     }
-                }
 
-                override fun onPartialResults(partialResults: android.os.Bundle?) {}
+                    override fun onBeginningOfSpeech() {
+                        Log.d("VoiceRecognition", "onBeginningOfSpeech")
+                        _recognizedText.value = "Sensing voice..."
+                    }
 
-                override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
-            })
+                    override fun onRmsChanged(rmsdB: Float) {}
+
+                    override fun onBufferReceived(buffer: ByteArray?) {}
+
+                    override fun onEndOfSpeech() {
+                        Log.d("VoiceRecognition", "onEndOfSpeech")
+                        _isReadyToSpeak.value = false
+                    }
+
+                    override fun onError(error: Int) {
+                        val message = when (error) {
+                            SpeechRecognizer.ERROR_AUDIO -> "Audio error"
+                            SpeechRecognizer.ERROR_CLIENT -> "Client error"
+                            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Permission missing"
+                            SpeechRecognizer.ERROR_NETWORK -> "Network error"
+                            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+                            SpeechRecognizer.ERROR_NO_MATCH -> "No speech detected"
+                            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Service busy"
+                            SpeechRecognizer.ERROR_SERVER -> "Server error"
+                            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Timeout"
+                            else -> "Error: $error"
+                        }
+                        Log.e("VoiceRecognition", "onError: $message ($error)")
+                        _recognizedText.value = "Status: $message"
+                        
+                        // Restart immediately if continuous and not a fatal error
+                        if (isContinuous && (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || 
+                            error == SpeechRecognizer.ERROR_NO_MATCH || 
+                            error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT ||
+                            error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY)) {
+                            
+                            mainHandler.postDelayed({
+                                if (_isListening.value) {
+                                    startListeningInternal()
+                                }
+                            }, 500)
+                        } else {
+                            _isListening.value = false
+                            _isReadyToSpeak.value = false
+                        }
+                    }
+
+                    override fun onResults(results: Bundle?) {
+                        val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        val text = matches?.firstOrNull() ?: ""
+                        _recognizedText.value = text
+                        Log.d("VoiceRecognition", "onResults: $text")
+
+                        if (text.contains(currentPanicKeyword, ignoreCase = true)) {
+                            _panicKeywordDetected.value = true
+                            Log.d("VoiceRecognition", "Keyword MATCHED!")
+                        }
+                        
+                        if (isContinuous) {
+                            mainHandler.postDelayed({
+                                if (_isListening.value) {
+                                    startListeningInternal()
+                                }
+                            }, 300)
+                        } else {
+                            _isListening.value = false
+                        }
+                    }
+
+                    override fun onPartialResults(partialResults: Bundle?) {
+                        val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        val text = matches?.firstOrNull() ?: ""
+                        if (text.isNotEmpty()) {
+                            _recognizedText.value = text
+                            if (text.contains(currentPanicKeyword, ignoreCase = true)) {
+                                _panicKeywordDetected.value = true
+                            }
+                        }
+                    }
+
+                    override fun onEvent(eventType: Int, params: Bundle?) {}
+                })
+
+                startListeningInternal()
+            } catch (e: Exception) {
+                Log.e("VoiceRecognition", "Crash in startListening: ${e.message}")
+                _isListening.value = false
+                _recognizedText.value = "Service error"
+            }
         }
-
-        speechRecognizer?.startListening(
-            android.speech.RecognizerIntent.getVoiceDetailsIntent(context)
-        )
-
-        // Start recording audio for emergency clip
-        startRecording()
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun startRecording() {
-        try {
-            val audioFile = File.createTempFile("emergency_audio", ".3gp", context.cacheDir)
-
-            mediaRecorder = MediaRecorder(context).apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-                setOutputFile(audioFile.absolutePath)
-
-                prepare()
-                start()
-            }
-
-            // Record for 10 seconds max
-            android.os.Handler().postDelayed({
-                stopRecordingAndUpload(audioFile)
-            }, 10000)
-        } catch (e: IOException) {
-            e.printStackTrace()
+    private fun startListeningInternal() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toString())
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
         }
-    }
-
-    private fun stopRecordingAndUpload(audioFile: File) {
         try {
-            mediaRecorder?.apply {
-                stop()
-                release()
-            }
-            mediaRecorder = null
-
-            // Upload audio file to Firebase Storage
-            // This would be implemented with Firebase Storage
+            speechRecognizer?.startListening(intent)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("VoiceRecognition", "Failed to startListeningInternal: ${e.message}")
         }
     }
 
-    private fun triggerEmergency() {
-        // Trigger emergency response
-        // Send location, audio clip, and alert to security
+    private fun stopListeningInternal() {
+        try {
+            speechRecognizer?.stopListening()
+            speechRecognizer?.cancel()
+            speechRecognizer?.destroy()
+        } catch (e: Exception) {
+            Log.e("VoiceRecognition", "Error during stop: ${e.message}")
+        } finally {
+            speechRecognizer = null
+        }
     }
 
     fun stopListening() {
-        speechRecognizer?.stopListening()
-        speechRecognizer?.destroy()
-        speechRecognizer = null
-
-        _isListening.value = false
+        mainHandler.post {
+            isContinuous = false
+            stopListeningInternal()
+            _isListening.value = false
+            _isReadyToSpeak.value = false
+        }
     }
 
     fun cleanup() {
         stopListening()
-        mediaRecorder?.release()
-        mediaRecorder = null
+    }
+    
+    fun resetPanicDetection() {
+        _panicKeywordDetected.value = false
     }
 }

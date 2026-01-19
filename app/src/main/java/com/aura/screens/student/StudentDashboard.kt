@@ -246,10 +246,10 @@ fun StudentDashboard(
                             )
 
                             DashboardActionCard(
-                                title = "Project Hub",
-                                icon = Icons.Default.Hub,
-                                gradient = PrimaryGradient,
-                                onClick = { navController.navigate("project_hub") },
+                                title = "Wellness",
+                                icon = Icons.Default.Mood,
+                                gradient = SecondaryGradient,
+                                onClick = { navController.navigate("wellness") },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -260,7 +260,15 @@ fun StudentDashboard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Pink Shield - ONLY FOR FEMALE USERS
+                            DashboardActionCard(
+                                title = "Project Hub",
+                                icon = Icons.Default.Hub,
+                                gradient = PrimaryGradient,
+                                onClick = { navController.navigate("project_hub") },
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            // Conditional Pink Shield / Report Issue
                             if (currentUser?.gender == "Female") {
                                 DashboardActionCard(
                                     title = "Pink Shield",
@@ -271,21 +279,28 @@ fun StudentDashboard(
                                 )
                             } else {
                                 DashboardActionCard(
-                                    title = "Wellness",
-                                    icon = Icons.Default.Mood,
-                                    gradient = SecondaryGradient,
-                                    onClick = { navController.navigate("wellness") },
+                                    title = "Report Issue",
+                                    icon = Icons.Default.Flag,
+                                    gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
+                                    onClick = { navController.navigate("complaint") },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
-
-                            DashboardActionCard(
-                                title = "Report Issue",
-                                icon = Icons.Default.Flag,
-                                gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
-                                onClick = { navController.navigate("complaint") },
-                                modifier = Modifier.weight(1f)
-                            )
+                        }
+                        
+                        // Add row for Report Issue if female (since Pink Shield takes its spot above)
+                        if (currentUser?.gender == "Female") {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                DashboardActionCard(
+                                    title = "Report Issue",
+                                    icon = Icons.Default.Flag,
+                                    gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
+                                    onClick = { navController.navigate("complaint") },
+                                    modifier = Modifier.weight(0.5f) // Half width card
+                                )
+                                Spacer(modifier = Modifier.weight(0.5f))
+                            }
                         }
                     }
                 }

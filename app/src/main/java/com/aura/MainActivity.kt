@@ -151,6 +151,9 @@ fun AuraApp(permissionsManager: PermissionsManager) {
                 composable("analytics") { AnalyticsScreen(navController) }
                 composable("settings") { SettingsScreen(navController) }
                 composable("profile_requests") { ProfileRequestsScreen(navController) }
+                
+                // Admin Wellness Report
+                composable("wellness_report") { WellnessReportScreen(navController) }
             }
 
             // Profile Loading Overlay

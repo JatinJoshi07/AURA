@@ -310,6 +310,13 @@ fun AdminDashboard(
                             )
 
                             QuickActionButton(
+                                title = "Wellness Report",
+                                description = "See the wellness of campus",
+                                icon = Icons.Default.Mood,
+                                onClick = { navController.navigate("wellness_report") }
+                            )
+
+                            QuickActionButton(
                                 title = "Profile Requests",
                                 description = "Review identity verification requests",
                                 icon = Icons.Default.VerifiedUser,

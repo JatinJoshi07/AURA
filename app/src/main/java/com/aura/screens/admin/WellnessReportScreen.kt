@@ -108,7 +108,7 @@ fun WellnessReportScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     CircularProgressIndicator(
-                                        progress = { campusMood.averageMood / 5f },
+                                        progress = { campusMood.averageMood.toFloat() / 5f },
                                         modifier = Modifier.fillMaxSize(),
                                         strokeWidth = 12.dp,
                                         color = getMoodColor(campusMood.averageMood),
@@ -199,7 +199,7 @@ fun MoodStatRow(label: String, percentage: Float, color: Color) {
     }
 }
 
-private fun getMoodColor(moodLevel: Float): Color {
+private fun getMoodColor(moodLevel: Double): Color {
     return when {
         moodLevel >= 4.0 -> Color(0xFF4CAF50)
         moodLevel >= 3.0 -> Color(0xFFFFC107)

@@ -249,7 +249,7 @@ fun ComplaintCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (complaint.priority == "high") Color(0xFFFFF3CD) else MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (complaint.priority == "high") Color(0x77302141) else MaterialTheme.colorScheme.surfaceVariant
         ),
         onClick = onClick
     ) {
