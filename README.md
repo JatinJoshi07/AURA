@@ -288,21 +288,7 @@ AURA's modular architecture enables deployment across:
 
 ---
 
-## 🚀 Why AURA Wins
 
-Unlike traditional campus apps that function as simple directories or bulletin boards, AURA is an **active participant in campus operations**:
-
-| Traditional Systems | AURA |
-|---------------------|------|
-| Manual emergency calls | Voice-activated silent SOS |
-| Paper-based maintenance requests | AI-powered image analysis with auto-ticketing |
-| Bulletin board job postings | Intelligent skill-vector matching |
-| Reactive incident response | Predictive hazard prevention |
-| Fragmented tools | Unified intelligence platform |
-
-**By combining Vision AI for infrastructure monitoring and Voice AI for safety coordination**, AURA provides security and operational efficiency that manual systems fundamentally cannot match.
-
----
 
 <div align="center">
 
