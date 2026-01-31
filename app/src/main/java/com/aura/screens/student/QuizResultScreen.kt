@@ -70,7 +70,7 @@ fun QuizResultScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
-                onClick = { navController.popBackStack(\"student_dashboard\", inclusive = false) },
+                onClick = { navController.popBackStack("student_dashboard", inclusive = false) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -80,7 +80,7 @@ fun QuizResultScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             OutlinedButton(
-                onClick = { navController.navigate(\"quiz_leaderboard/$quizId\") },
+                onClick = { navController.navigate("quiz_leaderboard/$quizId") },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {

@@ -24,7 +24,11 @@ data class User(
     val profileImage: String? = null,
     val createdAt: Timestamp = Timestamp.now(),
     val isActive: Boolean = true,
-    val lastLogin: Timestamp = Timestamp.now()
+    val lastLogin: Timestamp = Timestamp.now(),
+    
+    // Attendance stats
+    val totalClasses: Int = 0,
+    val classesPresent: Int = 0
 )
 
 data class Faculty(

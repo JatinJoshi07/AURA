@@ -2,13 +2,14 @@ package com.aura.models
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.ServerTimestamp
 
 data class Batch(
     @DocumentId val id: String = "",
-    val name: String = "", // e.g., "D division of Computer Engineering"
+    val name: String = "",
     val department: String = "",
-    val year: String = "", // e.g., "2024" or "3rd Year"
-    val createdBy: String = "", // Faculty ID
+    val year: String = "",
+    val createdBy: String = "",
     val studentIds: List<String> = emptyList(),
-    val createdAt: Timestamp = Timestamp.now()
+    @ServerTimestamp val createdAt: Timestamp? = null
 )

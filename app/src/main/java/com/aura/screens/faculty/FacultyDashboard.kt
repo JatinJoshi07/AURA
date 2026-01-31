@@ -258,6 +258,34 @@ fun FacultyDashboard(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             FacultyActionButton(
+                                title = "Manage Batches",
+                                description = "Create and manage student groups",
+                                icon = Icons.Default.Group,
+                                onClick = { navController.navigate("manage_batches") }
+                            )
+
+                            FacultyActionButton(
+                                title = "Take Attendance",
+                                description = "Mark daily student presence",
+                                icon = Icons.Default.HowToReg,
+                                onClick = { navController.navigate("take_attendance") }
+                            )
+
+                            FacultyActionButton(
+                                title = "Quiz Management",
+                                description = "Create and monitor assessments",
+                                icon = Icons.Default.Quiz,
+                                onClick = { navController.navigate("quiz_list") }
+                            )
+
+                            FacultyActionButton(
+                                title = "Performance Analytics",
+                                description = "Compare academic health",
+                                icon = Icons.AutoMirrored.Filled.TrendingUp,
+                                onClick = { navController.navigate("batch_comparison") }
+                            )
+
+                            FacultyActionButton(
                                 title = "Incident Dashboard",
                                 description = "Manage assigned emergencies",
                                 icon = Icons.Default.Emergency,

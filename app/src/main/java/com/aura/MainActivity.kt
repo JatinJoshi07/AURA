@@ -14,10 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.aura.screens.auth.FacultyRegisterScreen
 import com.aura.screens.auth.LoginScreen
 import com.aura.screens.auth.RegisterScreen
@@ -89,7 +91,6 @@ fun AuraApp(permissionsManager: PermissionsManager) {
                 else -> "student_dashboard"
             }
             
-            // Only redirect if we are on an auth screen
             val isAuthScreen = currentRoute == "register" || currentRoute == "login" || currentRoute == "faculty_register"
             if (isAuthScreen || currentRoute == null) {
                 navController.navigate(destination) {
@@ -97,7 +98,6 @@ fun AuraApp(permissionsManager: PermissionsManager) {
                 }
             }
         } else if (isInitialized && !isLoggedIn) {
-            // Redirect to login if not logged in and on a protected screen
             val isAuthScreen = currentRoute == "register" || currentRoute == "login" || currentRoute == "faculty_register"
             if (!isAuthScreen && currentRoute != null) {
                 navController.navigate("login") {
@@ -139,6 +139,7 @@ fun AuraApp(permissionsManager: PermissionsManager) {
                 composable("complaint") { ComplaintScreen(navController, authViewModel) }
                 composable("wellness") { WellnessScreen(navController, authViewModel) }
                 composable("gemini_companion") { GeminiCompanionScreen(navController) }
+                composable("student_quiz") { StudentQuizScreen(navController, authViewModel) }
 
                 // Faculty/Admin Features
                 composable("incident_dashboard") { IncidentDashboard(navController, authViewModel) }
@@ -148,15 +149,54 @@ fun AuraApp(permissionsManager: PermissionsManager) {
                 composable("manage_faculty") { ManageFaculty(navController, authViewModel) }
                 composable("broadcast") { BroadcastScreen(navController, authViewModel) }
                 
+                // Batch Management
+                composable("manage_batches") { BatchManagementScreen(navController, authViewModel) }
+                composable(
+                    "batch_details/{batchId}",
+                    arguments = listOf(navArgument("batchId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val batchId = backStackEntry.arguments?.getString("batchId") ?: ""
+                    BatchDetailScreen(batchId, navController)
+                }
+
+                // Quiz System
+                composable("quiz_list") { QuizListScreen(navController, authViewModel) }
+                composable("create_quiz") { QuizCreationScreen(navController, authViewModel) }
+                composable(
+                    "quiz_taking/{quizId}",
+                    arguments = listOf(navArgument("quizId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val quizId = backStackEntry.arguments?.getString("quizId") ?: ""
+                    QuizTakingScreen(quizId, navController, authViewModel)
+                }
+                composable(
+                    "quiz_leaderboard/{quizId}",
+                    arguments = listOf(navArgument("quizId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val quizId = backStackEntry.arguments?.getString("quizId") ?: ""
+                    QuizLeaderboardScreen(quizId, navController)
+                }
+                composable(
+                    "quiz_result/{quizId}/{score}",
+                    arguments = listOf(
+                        navArgument("quizId") { type = NavType.StringType },
+                        navArgument("score") { type = NavType.IntType }
+                    )
+                ) { backStackEntry ->
+                    val quizId = backStackEntry.arguments?.getString("quizId") ?: ""
+                    val score = backStackEntry.arguments?.getInt("score") ?: 0
+                    QuizResultScreen(quizId, score, navController)
+                }
+                
+                composable("batch_comparison") { BatchComparisonScreen(navController) }
+                composable("take_attendance") { AttendanceManagementScreen(navController) }
+                
                 composable("analytics") { AnalyticsScreen(navController) }
                 composable("settings") { SettingsScreen(navController) }
                 composable("profile_requests") { ProfileRequestsScreen(navController) }
-                
-                // Admin Wellness Report
                 composable("wellness_report") { WellnessReportScreen(navController) }
             }
 
-            // Profile Loading Overlay
             if (isLoggedIn && currentUser == null) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

@@ -12,7 +12,7 @@ class GeminiAI(private val context: Context) {
 
     private val tag = "GeminiAI"
     
-    // Optimized safety settings for institutional safety guidance
+    // Safety settings for campus usage
     private val safetySettings = listOf(
         SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.ONLY_HIGH),
         SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.ONLY_HIGH),
@@ -22,8 +22,9 @@ class GeminiAI(private val context: Context) {
 
     private val generativeModel by lazy {
         GenerativeModel(
+            // Corrected model string format for SDK version 0.9.0
             modelName = "gemini-1.5-flash",
-            apiKey = "AIzaSyAykyRrE-4LmkbroqfsIIZlCdp7MrxKo4o",
+            apiKey = "AIzaSyAfaROPktnIljltwht-DOFuHnUIHC8fky0",
             generationConfig = generationConfig {
                 temperature = 0.75f
                 topK = 40
@@ -38,16 +39,21 @@ class GeminiAI(private val context: Context) {
         return withContext(Dispatchers.IO) {
             try {
                 val response = generativeModel.generateContent(prompt)
-                val text = response.text
-                if (text.isNullOrBlank()) {
-                    Log.e(tag, "AI returned empty text. Finreason: ${response.candidates.firstOrNull()?.finishReason}")
-                    "I'm listening, but I couldn't generate a specific answer for that. Could you provide more details?"
-                } else {
-                    text
-                }
+                response.text ?: "I'm sorry, I couldn't generate a response."
             } catch (e: Exception) {
-                Log.e(tag, "AI Generation Error: ${e.message}")
-                "I'm temporarily unavailable. Please check your network and try again."
+                val errorMsg = e.localizedMessage ?: ""
+                Log.e(tag, "Gemini Error: $errorMsg")
+                
+                // Detailed handling for common API errors
+                when {
+                    errorMsg.contains("blocked", ignoreCase = true) -> 
+                        "API Blocked: Please enable 'Generative Language API' in Google Cloud Console."
+                    errorMsg.contains("404", ignoreCase = true) -> 
+                        "Model Not Found: The model name or version might be restricted for your region/key."
+                    errorMsg.contains("API_KEY_INVALID", ignoreCase = true) -> 
+                        "Invalid API Key. Please verify your credentials."
+                    else -> "AI Service Error: ${e.localizedMessage}"
+                }
             }
         }
     }
@@ -64,7 +70,7 @@ class GeminiAI(private val context: Context) {
                 )
                 response.text ?: "Image analysis unavailable."
             } catch (e: Exception) {
-                "Error analyzing image: ${e.message}"
+                "Error analyzing image: ${e.localizedMessage}"
             }
         }
     }
@@ -76,7 +82,7 @@ class GeminiAI(private val context: Context) {
                 val response = generativeModel.generateContent(prompt)
                 response.text ?: "Complaint summary unavailable."
             } catch (e: Exception) {
-                "Error processing complaint."
+                "Error processing complaint: ${e.localizedMessage}"
             }
         }
     }

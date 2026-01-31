@@ -42,7 +42,7 @@ fun StudentComplaintsScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        facultyViewModel.loadAllComplaints()
+        facultyViewModel.loadDashboardData()
     }
 
     Scaffold(
@@ -60,7 +60,7 @@ fun StudentComplaintsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { facultyViewModel.loadAllComplaints() }) {
+                    IconButton(onClick = { facultyViewModel.loadDashboardData() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
                 }
@@ -72,7 +72,7 @@ fun StudentComplaintsScreen(
             onRefresh = {
                 scope.launch {
                     isRefreshing = true
-                    facultyViewModel.loadAllComplaints()
+                    facultyViewModel.loadDashboardData()
                     delay(1000)
                     isRefreshing = false
                 }
@@ -106,7 +106,9 @@ fun StudentComplaintsScreen(
                         }
                     }
 
-                    if (complaints.filter { it.status == filterStatus }.isEmpty()) {
+                    val filteredComplaints = complaints.filter { it.status == filterStatus }
+
+                    if (filteredComplaints.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text("No $filterStatus complaints found", color = Color.Gray)
                         }
@@ -116,7 +118,7 @@ fun StudentComplaintsScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(complaints.filter { it.status == filterStatus }) { complaint ->
+                            items(filteredComplaints) { complaint ->
                                 ComplaintFacultyCard(
                                     complaint = complaint,
                                     onUpdateStatus = { newStatus ->

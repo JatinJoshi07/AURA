@@ -1,5 +1,6 @@
 package com.aura.screens.faculty
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,7 +47,10 @@ fun BatchManagementScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(onClick = { 
+                viewModel.loadAllStudents()
+                showAddDialog = true 
+            }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Batch")
             }
         }
@@ -65,7 +70,11 @@ fun BatchManagementScreen(
                         BatchCard(
                             batch = batch,
                             studentCount = batch.studentIds.size,
-                            onDelete = { viewModel.deleteBatch(batch.id) }
+                            onDelete = { viewModel.deleteBatch(batch.id) },
+                            onClick = { 
+                                // Navigate to batch details
+                                navController.navigate("batch_details/${batch.id}")
+                            }
                         )
                     }
                 }
@@ -90,9 +99,9 @@ fun BatchManagementScreen(
 }
 
 @Composable
-fun BatchCard(batch: Batch, studentCount: Int, onDelete: () -> Unit) {
+fun BatchCard(batch: Batch, studentCount: Int, onDelete: () -> Unit, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -145,7 +154,7 @@ fun CreateBatchDialog(
                 OutlinedTextField(value = dept, onValueChange = { dept = it }, label = { Text("Department") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = year, onValueChange = { year = it }, label = { Text("Year") }, modifier = Modifier.fillMaxWidth())
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 Text("Select Students", style = MaterialTheme.typography.titleSmall)
                 OutlinedTextField(
@@ -153,14 +162,17 @@ fun CreateBatchDialog(
                     onValueChange = { searchQuery = it },
                     label = { Text("Search by name/enrollment") },
                     modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = { Icon(Icons.Default.Group, null) }
+                    trailingIcon = { Icon(Icons.Default.Search, null) }
                 )
                 
                 LazyColumn(modifier = Modifier.height(200.dp)) {
                     items(filteredStudents) { student ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                if (selectedStudentIds.contains(student.id)) selectedStudentIds.remove(student.id)
+                                else selectedStudentIds.add(student.id)
+                            }
                         ) {
                             Checkbox(
                                 checked = selectedStudentIds.contains(student.id),

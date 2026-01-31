@@ -64,7 +64,7 @@ fun EmergencyScreen(
     var timerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var selectedEmergencyType by remember { mutableStateOf("General") }
     
-    // Safety Tools State
+    // Safety Tools
     var isSirenOn by remember { mutableStateOf(false) }
     var isFlashlightOn by remember { mutableStateOf(false) }
     var isFakeCallActive by remember { mutableStateOf(false) }
@@ -72,7 +72,7 @@ fun EmergencyScreen(
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val audioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
-    // Flashlight Logic
+    // Flashlight 05
     val cameraManager = remember { context.getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     val cameraId = remember { 
         try { 

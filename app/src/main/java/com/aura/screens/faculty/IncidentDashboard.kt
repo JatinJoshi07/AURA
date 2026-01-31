@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -55,7 +57,7 @@ fun IncidentDashboard(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        facultyViewModel.loadAssignedEmergencies()
+        facultyViewModel.loadDashboardData()
     }
 
     Scaffold(
@@ -93,7 +95,7 @@ fun IncidentDashboard(
                 onRefresh = {
                     scope.launch {
                         isRefreshing = true
-                        facultyViewModel.loadAssignedEmergencies()
+                        facultyViewModel.loadDashboardData()
                         delay(1000)
                         isRefreshing = false
                     }
@@ -249,6 +251,83 @@ fun IncidentDashboard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EmergencyDetailBottomSheet(
+    emergency: Emergency,
+    onDismiss: () -> Unit,
+    onResolve: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(),
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Emergency Details",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close")
+                }
+            }
+
+            // Info items
+            DetailItem(label = "Type", value = emergency.type.replaceFirstChar { it.uppercase() })
+            DetailItem(label = "Priority", value = emergency.priority.replaceFirstChar { it.uppercase() })
+            DetailItem(label = "Status", value = emergency.status.replaceFirstChar { it.uppercase() })
+            DetailItem(label = "Reported By", value = emergency.userName)
+            DetailItem(
+                label = "Time",
+                value = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault()).format(emergency.timestamp?.toDate() ?: Date())
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text("Description", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(emergency.description, style = MaterialTheme.typography.bodyMedium)
+
+            if (emergency.status == "active") {
+                Button(
+                    onClick = onResolve,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Mark as Resolved")
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun DetailItem(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
 @Composable
 fun IncidentStat(
     title: String,
@@ -353,22 +432,8 @@ fun IncidentDetailCard(
                     ) {
                         Text(
                             emergency.status.replaceFirstChar { it.uppercase() },
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = when (emergency.priority) {
-                            "critical" -> Color(0xFFFFCDD2)
-                            "high" -> Color(0xFFFFECB3)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        }
-                    ) {
-                        Text(
-                            emergency.priority.replaceFirstChar { it.uppercase() },
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                 }
@@ -376,7 +441,8 @@ fun IncidentDetailCard(
 
             Text(
                 emergency.description,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2
             )
 
             Row(
@@ -392,25 +458,14 @@ fun IncidentDetailCard(
                         )
                     )
                     Text(
-                        emergency.timestamp?.let { formatIncidentTime(it.toDate()) } ?: "Just now",
+                        emergency.timestamp?.let { formatEmergencyTime(it.toDate()) } ?: "Just now",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     )
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { /* View location */ },
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Icon(Icons.Default.LocationOn, contentDescription = "Location", modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Location", fontSize = 12.sp)
-                    }
-
+                if (emergency.status == "active") {
                     Button(
                         onClick = onResolve,
                         colors = ButtonDefaults.buttonColors(
@@ -419,23 +474,8 @@ fun IncidentDetailCard(
                         ),
                         modifier = Modifier.height(36.dp)
                     ) {
-                        Text("Resolve", fontSize = 12.sp)
+                        Text("Mark Resolved", fontSize = 12.sp)
                     }
-                }
-            }
-
-            // Danger level
-            if (emergency.dangerLevel > 0) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(Icons.Default.Warning, contentDescription = "Danger", modifier = Modifier.size(16.dp))
-                    Text(
-                        "Danger Level:",
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    DangerLevelIndicator(level = emergency.dangerLevel)
                 }
             }
         }
@@ -447,333 +487,38 @@ fun IncidentMapView(
     emergencies: List<Emergency>,
     onEmergencySelect: (Emergency) -> Unit
 ) {
-    // Default camera position (college location)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(28.6139, 77.2090), 15f) // Delhi coordinates
+        position = CameraPosition.fromLatLngZoom(LatLng(19.0760, 72.8777), 12f)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
-        ) {
-            emergencies.forEach { emergency ->
-                emergency.location?.let { location ->
-                    Marker(
-                        state = MarkerState(
-                            position = LatLng(location.latitude, location.longitude)
-                        ),
-                        title = emergency.description,
-                        snippet = "Priority: ${emergency.priority}",
-                        onClick = {
-                            onEmergencySelect(emergency)
-                            true
-                        }
-                    )
-                }
-            }
-        }
-
-        // Map controls
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(Color.Red)
-                    )
-                    Text("Critical", style = MaterialTheme.typography.labelSmall)
-
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFF9800))
-                    )
-                    Text("High", style = MaterialTheme.typography.labelSmall)
-
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
-                    )
-                    Text("Normal", style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EmergencyDetailBottomSheet(
-    emergency: Emergency,
-    onDismiss: () -> Unit,
-    onResolve: () -> Unit
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(),
-        containerColor = MaterialTheme.colorScheme.surface
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Incident Details",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
-                }
-            }
-
-            // Type and Priority
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                InfoChip(
-                    label = emergency.type.replaceFirstChar { it.uppercase() },
-                    icon = Icons.Default.Emergency
-                )
-                InfoChip(
-                    label = emergency.priority.replaceFirstChar { it.uppercase() },
-                    icon = Icons.Default.PriorityHigh,
-                    color = when (emergency.priority) {
-                        "critical" -> MaterialTheme.colorScheme.errorContainer
-                        "high" -> Color(0xFFFFF3CD)
-                        else -> MaterialTheme.colorScheme.surfaceVariant
-                    }
-                )
-                InfoChip(
-                    label = emergency.status.replaceFirstChar { it.uppercase() },
-                    icon = Icons.Default.Info,
-                    color = when (emergency.status) {
-                        "active" -> MaterialTheme.colorScheme.errorContainer
-                        else -> MaterialTheme.colorScheme.primaryContainer
+        emergencies.forEach { emergency ->
+            emergency.location?.let { loc ->
+                Marker(
+                    state = MarkerState(position = LatLng(loc.latitude, loc.longitude)),
+                    title = emergency.type,
+                    snippet = "By: ${emergency.userName}",
+                    onClick = {
+                        onEmergencySelect(emergency)
+                        true
                     }
                 )
             }
-
-            // Description
-            Column {
-                Text(
-                    "Description",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    emergency.description,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            // User Information
-            Column {
-                Text(
-                    "Reported By",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                emergency.userName.firstOrNull()?.uppercase() ?: "U",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            )
-                        }
-                        Column {
-                            Text(
-                                emergency.userName,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
-                            Text(
-                                "Reported ${emergency.timestamp?.let { formatIncidentTime(it.toDate()) } ?: "Just now"}",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Location
-            emergency.location?.let {
-                Column {
-                    Text(
-                        "Location",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.clickable { /* Open full map */ }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.LocationOn,
-                                contentDescription = "Location",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    emergency.address.ifEmpty { "College Campus" },
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    "Lat: ${it.latitude}, Lng: ${it.longitude}",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    )
-                                )
-                            }
-                            Icon(
-                                Icons.Default.ChevronRight,
-                                contentDescription = "View",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Actions
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { /* Call student */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Call, contentDescription = "Call")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Call Student")
-                }
-
-                Button(
-                    onClick = onResolve,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Icon(Icons.Default.DoneAll, contentDescription = "Resolve")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mark Resolved")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-@Composable
-fun InfoChip(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color = MaterialTheme.colorScheme.surfaceVariant
-) {
-    AssistChip(
-        onClick = {},
-        label = {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Medium
-                )
-            )
-        },
-        leadingIcon = {
-            Icon(
-                icon,
-                contentDescription = label,
-                modifier = Modifier.size(16.dp)
-            )
-        },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = color
-        )
-    )
-}
-
-private fun formatIncidentTime(date: Date): String {
+private fun formatEmergencyTime(date: Date): String {
     val now = Date()
     val diff = now.time - date.time
     val minutes = diff / (60 * 1000)
-    val hours = diff / (60 * 60 * 1000)
 
     return when {
         minutes < 1 -> "Just now"
-        minutes < 60 -> "$minutes minutes ago"
-        hours < 24 -> "$hours hours ago"
-        else -> SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()).format(date)
+        minutes < 60 -> "$minutes min ago"
+        else -> SimpleDateFormat("hh:mm a", Locale.getDefault()).format(date)
     }
 }

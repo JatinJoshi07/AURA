@@ -27,12 +27,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.aura.components.*
+import com.aura.models.Quiz
 import com.aura.ui.theme.PrimaryGradient
 import com.aura.ui.theme.SecondaryGradient
-import com.aura.viewmodels.AuthViewModel
-import com.aura.viewmodels.EmergencyViewModel
-import com.aura.viewmodels.ProjectViewModel
-import com.aura.viewmodels.BroadcastViewModel
+import com.aura.viewmodels.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,13 +41,21 @@ fun StudentDashboard(
     authViewModel: AuthViewModel,
     emergencyViewModel: EmergencyViewModel = hiltViewModel(),
     projectViewModel: ProjectViewModel = hiltViewModel(),
-    broadcastViewModel: BroadcastViewModel = hiltViewModel()
+    broadcastViewModel: BroadcastViewModel = hiltViewModel(),
+    quizViewModel: QuizViewModel = hiltViewModel()
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val emergencies by emergencyViewModel.emergencies.collectAsState()
     val activeEmergency by emergencyViewModel.activeEmergency.collectAsState()
     val projects by projectViewModel.allProjects.collectAsState()
     val broadcasts by broadcastViewModel.broadcasts.collectAsState()
+    val availableQuizzes by quizViewModel.availableQuizzes.collectAsState()
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            quizViewModel.loadQuizzesForStudent()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Decorative Header background
@@ -187,7 +195,51 @@ fun StudentDashboard(
                     }
                 }
 
-                // Active User SOS Alert (Highest Priority)
+                // Active Quiz Alert (Highest Priority Notification)
+                if (availableQuizzes.isNotEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .clickable { navController.navigate("student_quiz") },
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Quiz, contentDescription = null, tint = Color.White)
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "NEW QUIZ AVAILABLE",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "${availableQuizzes.size} active assessment(s) found",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                Icon(Icons.Default.ChevronRight, contentDescription = null)
+                            }
+                        }
+                    }
+                }
+
+                // Active User SOS Alert
                 activeEmergency?.let { emergency ->
                     item {
                         Card(
@@ -246,10 +298,10 @@ fun StudentDashboard(
                             )
 
                             DashboardActionCard(
-                                title = "Wellness",
-                                icon = Icons.Default.Mood,
-                                gradient = SecondaryGradient,
-                                onClick = { navController.navigate("wellness") },
+                                title = "Quizzes",
+                                icon = Icons.Default.Quiz,
+                                gradient = listOf(Color(0xFF6366F1), Color(0xFF4338CA)),
+                                onClick = { navController.navigate("student_quiz") },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -268,7 +320,25 @@ fun StudentDashboard(
                                 modifier = Modifier.weight(1f)
                             )
 
-                            // Conditional Pink Shield / Report Issue
+                            DashboardActionCard(
+                                title = "Wellness",
+                                icon = Icons.Default.Mood,
+                                gradient = SecondaryGradient,
+                                onClick = { navController.navigate("wellness") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        
+                        // Row for Report Issue
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            DashboardActionCard(
+                                title = "Report Issue",
+                                icon = Icons.Default.Flag,
+                                gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
+                                onClick = { navController.navigate("complaint") },
+                                modifier = Modifier.weight(1f)
+                            )
                             if (currentUser?.gender == "Female") {
                                 DashboardActionCard(
                                     title = "Pink Shield",
@@ -278,28 +348,7 @@ fun StudentDashboard(
                                     modifier = Modifier.weight(1f)
                                 )
                             } else {
-                                DashboardActionCard(
-                                    title = "Report Issue",
-                                    icon = Icons.Default.Flag,
-                                    gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
-                                    onClick = { navController.navigate("complaint") },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                        
-                        // Add row for Report Issue if female (since Pink Shield takes its spot above)
-                        if (currentUser?.gender == "Female") {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                DashboardActionCard(
-                                    title = "Report Issue",
-                                    icon = Icons.Default.Flag,
-                                    gradient = listOf(Color(0xFFF59E0B), Color(0xFFD97706)),
-                                    onClick = { navController.navigate("complaint") },
-                                    modifier = Modifier.weight(0.5f) // Half width card
-                                )
-                                Spacer(modifier = Modifier.weight(0.5f))
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
